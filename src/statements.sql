@@ -1,0 +1,2 @@
+INSERT INTO shows (name, date, location, venue, artists)
+VALUES ("Coup De Grace Tour", "07/26/24", "Atlanta, GA", "The Masquerade - Hell", "SeeYouSpaceCowboy, The Callous Daoboys, Omerta, Stateside, Your Spirit Dies");
