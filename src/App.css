@@ -2,6 +2,7 @@
   max-width: 65rem;
   width: 100%;
   padding: 2rem;
+  margin: 0 auto;
 }
 
 .logo {
@@ -10,9 +11,11 @@
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
@@ -21,6 +24,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -47,6 +51,21 @@ ul {
 
 h2 {
   margin: 0;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+}
+
+.nav h1 {
+  margin-right: 2rem;
+}
+
+.nav button {
+  background: none;
+  border: none;
+  padding: 0;
 }
 
 /* Grid layout */
@@ -85,7 +104,8 @@ h2 {
   background-size: cover;
   background-position: center;
   filter: blur(15px);
-  transform: scale(1.1); /* prevents blur edges from showing */
+  transform: scale(1.1);
+  /* prevents blur edges from showing */
 }
 
 .showCard img {
@@ -122,11 +142,22 @@ h2 {
 }
 
 .show-form {
-  display: grid;
+  display: flex;
+  flex-direction: column;
+}
+
+.show-form button[type="submit"] {
+  width: fit-content;
 }
 
 .form-field {
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-field label {
+  text-align: left;
+  margin-left: 8px;
 }
 
 .form-field input,
@@ -136,4 +167,88 @@ h2 {
   padding: 0.5rem;
   font-size: 1rem;
   margin-bottom: 1rem;
+}
+
+input[type="file"] {
+  width: fit-content;
+}
+
+.message {
+  margin-bottom: 1rem;
+  padding: 0.6em 1.2em;
+}
+
+.message-success {
+  border: 1px solid green;
+  border-radius: 8px;
+  background-color: rgba(0, 128, 0, 0.25);
+}
+
+.message-error {
+  border: 1px solid red;
+  border-radius: 8px;
+  background-color: rgba(255, 0, 0, 0.25);
+}
+
+.modal-overlay {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(15px);
+  z-index: 2;
+}
+
+.modal-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+}
+
+.modal-content {
+  position: relative;
+  background: #242424;
+  margin: 2rem auto 0;
+  width: 80%;
+  text-align: center;
+  padding: 2rem;
+}
+
+.modal-overlay .modal-close {
+  background: none;
+  padding: none;
+  border: none;
+  position: absolute;
+  top: -2%;
+  right: -4%;
+}
+
+.show-modal img {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.show-modal-title {
+  display: flex;
+  justify-content: center;
+}
+
+.show-modal-title button {
+  margin-left: 1rem;
+}
+
+.button-invisible {
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+@media screen and (min-width: 768px) {
+  .shows-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
