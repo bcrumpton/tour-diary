@@ -1,58 +1,72 @@
 import { useEffect, useState } from 'react'
 import ShowCard from './components/showCard'
+import FormField from './components/formField'
 import './App.css'
-import { supabase } from './createClient'
+import { pb } from '../pocketbase'
 
 function App() {
+  const initialFormData = {
+    date: "",
+    venue: "",
+    city: "",
+    state: "",
+    bands: "",
+    flyer: null
+  };
   const [shows, setShows] = useState([]);
+  const [formData, setFormData] = useState(initialFormData);
 
   useEffect(() => {
-    console.log(supabase);
     loadShows()
   }, []);
 
   async function loadShows() {
-    const { data, error } = await supabase
-      .from('shows')
-      .select()
+    // fetch shows
+    const showData = await pb.collection('shows').getList(1, 50, { $autoCancel: false });
 
-    if (error) {
-      console.error(error);
-    } else {
-      setShows(data);
-    }
-
-    console.log('shows', shows);
+    const { items } = showData;
+    
+    setShows(items);
   }
 
-  async function uploadPhoto(event) {
-    event.preventDefault();
-    const formData = new FormData(event.target.form);
+  function handleChange(e) {
+    const {name, value, files, type} = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: files && files.length > 0 ? files[0] : value
+    }))
+  }
 
-    console.log(formData.entries)
-    // const avatarFile = event.target.files[0]
-    // const { data, error } = await supabase
-    //   .storage
-    //   .from('avatars')
-    //   .upload('public/avatar1.png', avatarFile, {
-    //     cacheControl: '3600',
-    //     upsert: false
-    //   })
+  async function submitShow(event) {
+    event.preventDefault();
+
+    try {
+      const record = await pb.collection('shows').create(formData);
+      console.log('created record', record);
+      loadShows();
+      setFormData(initialFormData);
+    } catch(err) {
+      console.error("failed to create", err);
+    }
   }
 
   return (
     <>
       <h1>Tour Diary</h1>
 
-      <form method="post" encType='multipart/form-data'>
-        <input type="file" name="file" id="file" />
-        <button type="submit" onClick={uploadPhoto}>Upload</button>
+      <form className="show-form" method="post" encType='multipart/form-data'>
+        <FormField name="date" type="date" value={formData.date} onChange={handleChange} />
+        <FormField name="venue" type="text" value={formData.venue} onChange={handleChange} />
+        <FormField name="city" type="text" value={formData.city} onChange={handleChange} />
+        <FormField name="state" type="text" value={formData.state} onChange={handleChange} />
+        <FormField name="bands" type="textarea" value={formData.bands} rows="5" cols="30" onChange={handleChange} />
+        <FormField name="flyer" type="file" onChange={handleChange} />
+        <button type="submit" onClick={submitShow}>Upload</button>
       </form>
 
-      {/* {shows.map(show, idx => {
-        return <ShowCard {...show} />
-      })} */}
-
+      <div className="shows-grid">
+        {shows.map(show => <ShowCard key={show.id} {...show} />)}
+      </div>
     </>
   )
 }
