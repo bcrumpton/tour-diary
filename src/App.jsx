@@ -25,6 +25,7 @@ function App() {
   const [formIsOpen, setFormIsOpen] = useState(false);
   const [selectedShow, setSelectedShow] = useState(null);
   const [editingShow, setEditingShow] = useState(null);
+  const [password, setPassword] = useState(null);
 
   useEffect(() => {
     loadShows()
@@ -42,7 +43,6 @@ function App() {
       sort: '-date'
     });
     const { items } = showData;
-    // console.log(showData);
     setShows(items);
   }
 
@@ -76,24 +76,27 @@ function App() {
 
   async function submitShow(event) {
     event.preventDefault();
-    try {
-      if (editingShow) {
-        const updateData = Object.fromEntries(
-          Object.entries(formData).filter(([key, value]) => value !== null && value !== "")
-        )
-        const record = await pb.collection('shows').update(editingShow.id, updateData);
-        setEditingShow(null);
-        setMessage({ text: "Success, your show has been updated", type: "success" });
-        loadShows();
-      } else {
-        const record = await pb.collection('shows').create(formData);
-        setMessage({ text: "Success! The show has been added.", type: "success" });
-        loadShows();
-        setFormData(initialFormData);
+    if (formData.password === "mellon") {
+      try {
+        if (editingShow) {
+          const updateData = Object.fromEntries(
+            Object.entries(formData).filter(([key, value]) => value !== null && value !== "")
+          )
+          const record = await pb.collection('shows').update(editingShow.id, updateData);
+          setEditingShow(null);
+          setMessage({ text: "Success, your show has been updated", type: "success" });
+          loadShows();
+        } else {
+          const record = await pb.collection('shows').create(formData);
+          setMessage({ text: "Success! The show has been added.", type: "success" });
+          loadShows();
+          setFormData(initialFormData);
+        }
+      } catch (err) {
+        setMessage({ text: `Error: Something went wrong, please try again. ${err}`, type: "error" });
       }
-    } catch (err) {
-      // console.error("failed to create", err);
-      setMessage({ text: `Error: Something went wrong, please try again. ${err}`, type: "error" });
+    } else {
+      setMessage({ text: "Please enter the correct password", type: "error" })
     }
   }
 
@@ -122,15 +125,16 @@ function App() {
 
       {formIsOpen && <Modal onClose={setFormIsOpen}>
         <h2>{editingShow ? "Edit Show" : "Add Show"}</h2>
-        <form className="show-form" method="post" encType='multipart/form-data'>
-          <FormField name="date" type="date" value={formData.date} onChange={handleChange} />
-          <FormField placeholder="Ex: Bridgestone Arena" name="venue" type="text" value={formData.venue} onChange={handleChange} />
-          <FormField placeholder="Ex: Nashville" name="city" type="text" value={formData.city} onChange={handleChange} />
-          <FormField placeholder="Ex: TN" name="state" type="text" value={formData.state} onChange={handleChange} />
-          <FormField placeholder="Start new line for each band" name="bands" type="textarea" value={formData.bands} rows="5" cols="30" onChange={handleChange} />
-          <FormField name="flyer" type="file" onChange={handleChange} />
+        <form className="show-form" method="post" encType='multipart/form-data' onSubmit={submitShow}>
+          <FormField required={true} name="date" type="date" value={formData.date} onChange={handleChange} />
+          <FormField required={true} placeholder="Ex: Bridgestone Arena" name="venue" type="text" value={formData.venue} onChange={handleChange} />
+          <FormField required={true} placeholder="Ex: Nashville" name="city" type="text" value={formData.city} onChange={handleChange} />
+          <FormField required={true} placeholder="Ex: TN" name="state" type="text" value={formData.state} onChange={handleChange} />
+          <FormField required={true} placeholder="Start new line for each band" name="bands" type="textarea" value={formData.bands} rows="5" cols="30" onChange={handleChange} />
+          <FormField required={true} name="flyer" type="file" onChange={handleChange} />
+          <FormField required={true} name="password" type="password" value={formData.password} onChange={handleChange} />
           {message && <Message message={message} />}
-          <button type="submit" onClick={submitShow}>Upload</button>
+          <button type="submit">Upload</button>
         </form>
       </Modal>}
 

@@ -1,14 +1,11 @@
-/* #root {
-  max-width: 65rem;
-  width: 100%;
-  padding: 2rem;
-  margin: 0 auto;
-} */
+* {
+  font-family: monospace;
+}
 
 .container {
   max-width: 65rem;
   width: 100%;
-  padding: 2rem;
+  padding: 1rem;
   margin: 0 auto;
 }
 
@@ -30,7 +27,7 @@ h2 {
   align-items: center;
   position: sticky;
   top: 0;
-  z-index: 3;
+  z-index: 2;
   background: #242424;
 }
 
@@ -42,6 +39,7 @@ h2 {
   background: none;
   border: none;
   padding: 0;
+  color: #fff;
 }
 
 /* Grid layout */
@@ -92,7 +90,7 @@ h2 {
 }
 
 .showCard h2 {
-  font-size: 1.25rem;
+  font-size: 1rem;
   color: #212121;
   background: rgba(255, 255, 255, 0.75);
   padding: 0.5rem;
@@ -124,6 +122,7 @@ h2 {
 
 .show-form button[type="submit"] {
   width: fit-content;
+  color: #fff;
 }
 
 .form-field {
@@ -174,10 +173,11 @@ input[type="file"] {
   height: 100%;
   background-color: rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(15px);
-  z-index: 2;
+  z-index: 3;
 }
 
 .modal-wrapper {
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -191,7 +191,7 @@ input[type="file"] {
   margin: 2rem auto 0;
   width: 80%;
   text-align: center;
-  padding: 2rem;
+  padding: 1rem;
   max-height: 90vh;
   overflow-y: auto;
   overflow-x: hidden;
@@ -202,8 +202,9 @@ input[type="file"] {
   padding: none;
   border: none;
   position: absolute;
-  top: -2%;
-  right: -4%;
+  top: 0%;
+  right: 0%;
+  color: #fff;
 }
 
 .show-modal img {
@@ -214,16 +215,19 @@ input[type="file"] {
 .show-modal-title {
   display: flex;
   justify-content: center;
+  align-items: center;
 }
 
 .show-modal-title button {
   margin-left: 1rem;
+  color: #fff;
 }
 
 .button-invisible {
   border: none;
   background: none;
   padding: 0;
+  color: #fff;
 }
 
 @media screen and (max-width: 767.99px) {
@@ -244,5 +248,17 @@ input[type="file"] {
 @media screen and (min-width: 768px) {
   .shows-grid {
     grid-template-columns: repeat(3, 1fr);
+  }
+
+  .container {
+    padding: 2rem;
+  }
+
+  .modal-content {
+    padding: 2rem;
+  }
+
+  .showCard h2 {
+    font-size: 1.25rem;
   }
 }
