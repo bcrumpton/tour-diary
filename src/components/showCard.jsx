@@ -16,7 +16,7 @@ export default function showCard({ id, collectionId, flyer, venue, city, state, 
         <h2>{venue}</h2>
         <p>{`${city}, ${state}`}</p>
         <p>{format(new Date(date), "MM/dd/yyyy")}</p>
-        <div>
+        <div className="truncate-overflow">
           <p>
             {bands.split(/\r?\n/).map((band, i, arr) => (
               <span className='band' key={i}>{band}{(i + 1) !== arr.length ? ", " : ""}</span>

@@ -37,7 +37,10 @@ function App() {
 
   async function loadShows() {
     // fetch shows
-    const showData = await pb.collection('shows').getList(1, 50, { $autoCancel: false });
+    const showData = await pb.collection('shows').getList(1, 50, {
+      $autoCancel: false,
+      sort: '-date'
+    });
     const { items } = showData;
     // console.log(showData);
     setShows(items);
@@ -78,7 +81,6 @@ function App() {
         const updateData = Object.fromEntries(
           Object.entries(formData).filter(([key, value]) => value !== null && value !== "")
         )
-        debugger;
         const record = await pb.collection('shows').update(editingShow.id, updateData);
         setEditingShow(null);
         setMessage({ text: "Success, your show has been updated", type: "success" });
@@ -97,20 +99,26 @@ function App() {
 
   return (
     <>
-      <nav className="nav">
-        <h1>Tour Diary</h1>
-        <button>
-          <BsFillPlusCircleFill size={40} onClick={() => {
-            setEditingShow(null);
-            setFormData(initialFormData);
-            setFormIsOpen(true)
-          }} />
-        </button>
+      <nav className="nav container">
+        <div className="nav">
+          <h1>Tour Diary</h1>
+          <button>
+            <BsFillPlusCircleFill size={40} onClick={() => {
+              setEditingShow(null);
+              setFormData(initialFormData);
+              setFormIsOpen(true)
+            }} />
+          </button>
+        </div>
       </nav>
 
-      <div className="shows-grid">
-        {shows.map(show => <ShowCard key={show.id} onClick={() => { setSelectedShow(show) }} {...show} />)}
+
+      <div className="shows container">
+        <div className="shows-grid">
+          {shows.map(show => <ShowCard key={show.id} onClick={() => { setSelectedShow(show) }} {...show} />)}
+        </div>
       </div>
+
 
       {formIsOpen && <Modal onClose={setFormIsOpen}>
         <h2>{editingShow ? "Edit Show" : "Add Show"}</h2>
