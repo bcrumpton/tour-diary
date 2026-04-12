@@ -1,6 +1,8 @@
 import './App.css'
+import 'leaflet/dist/leaflet.css'
 import { useEffect, useState } from 'react'
 import ShowCard from './components/showCard'
+import TourCard from './components/tourCard'
 import FormField from './components/formField'
 import Message from './components/message'
 import Modal from './components/modal'
@@ -9,6 +11,21 @@ import { BsFillPlusCircleFill } from "react-icons/bs";
 import { RiEditCircleFill } from "react-icons/ri";
 import { IoCloseCircle } from "react-icons/io5";
 import { format } from 'date-fns';
+import { MapContainer, TileLayer, Polyline, Marker, useMap } from 'react-leaflet'
+import L from 'leaflet'
+
+function FitBounds({ dates }) {
+  const map = useMap()
+  const bounds = dates.map(stop => [stop.lat, stop.lng])
+  map.fitBounds(bounds, { padding: [30, 30] })
+  return null
+}
+
+const smallIcon = new L.Icon({
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  iconSize: [12, 20],
+  iconAnchor: [6, 20],
+})
 
 function App() {
   const initialFormData = {
@@ -27,6 +44,8 @@ function App() {
   const [editingShow, setEditingShow] = useState(null);
   const [password, setPassword] = useState(null);
 
+  // TODO: refactor tours into edit and add functionality
+
   useEffect(() => {
     loadShows()
   }, []);
@@ -42,12 +61,18 @@ function App() {
       $autoCancel: false,
       sort: '-date'
     });
-    const { items } = showData;
-    setShows(items);
+
+    const tourData = await pb.collection('tours').getList(1, 50, {
+      $autoCancel: false,
+      sort: '-year'
+    });
+
+    const data = [...tourData.items, ...showData.items];
+    setShows(data);
   }
 
   function handleChange(e) {
-    const { name, value, files, type } = e.target
+    const { name, value, files } = e.target
     setFormData(prev => ({
       ...prev,
       [name]: files && files.length > 0 ? files[0] : value
@@ -118,10 +143,13 @@ function App() {
 
       <div className="shows container">
         <div className="shows-grid">
-          {shows.map(show => <ShowCard key={show.id} onClick={() => { setSelectedShow(show) }} {...show} />)}
+          {shows.map(show => show.collectionName === "tours" ?
+            <TourCard key={show.id} onClick={() => { setSelectedShow(show) }}
+              {...show} /> :
+            <ShowCard key={show.id} onClick={() => { setSelectedShow(show) }} {...show} />
+          )}
         </div>
       </div>
-
 
       {formIsOpen && <Modal onClose={setFormIsOpen}>
         <h2>{editingShow ? "Edit Show" : "Add Show"}</h2>
@@ -151,11 +179,19 @@ function App() {
                 <IoCloseCircle size={42} />
               </button>
             </div>
-            <p>{selectedShow.city}, {selectedShow.state}</p>
-            <p>{format(new Date(selectedShow.date), "MM/dd/yyyy")}</p>
+            {selectedShow.year ? <p>{selectedShow.year}</p> : ''}
+            {selectedShow.city && selectedShow.state ? <p>{selectedShow.city}, {selectedShow.state}</p> : ''}
+            {selectedShow.date ? <p>{format(new Date(selectedShow.date), "MM/dd/yyyy")}</p> : ''}
             {selectedShow.bands.split("\r\n").map((band, i, arr) => {
               return <span key={i}>{band}{(i + 1 !== arr.length ? ", " : "")}</span>
             })}
+
+            <MapContainer className='leaflet-route' center={[0, 0]} zoom={2} style={{ height: "400px", width: "100%" }}>
+              <FitBounds dates={selectedShow.dates} />
+              <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
+              <Polyline key="route" positions={selectedShow.dates.map(stop => [stop.lat, stop.lng])} color="black" />
+              {selectedShow.dates.map((stop, i) => <Marker key={i} position={[stop.lat, stop.lng]} icon={smallIcon} />)}
+            </MapContainer>
           </div>
         </Modal>
       )}
