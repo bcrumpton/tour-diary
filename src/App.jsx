@@ -1,198 +1,248 @@
 import './App.css'
-import 'leaflet/dist/leaflet.css'
-import { useEffect, useState } from 'react'
-import ShowCard from './components/showCard'
-import TourCard from './components/tourCard'
+import { useState, useEffect } from 'react'
+import { Outlet, useNavigate, Link } from 'react-router-dom'
 import FormField from './components/formField'
+import TourStopField from './components/tourStopField'
 import Message from './components/message'
 import Modal from './components/modal'
 import { pb } from '../pocketbase'
-import { BsFillPlusCircleFill } from "react-icons/bs";
-import { RiEditCircleFill } from "react-icons/ri";
-import { IoCloseCircle } from "react-icons/io5";
-import { format } from 'date-fns';
-import { MapContainer, TileLayer, Polyline, Marker, useMap } from 'react-leaflet'
-import L from 'leaflet'
+import { BsFillPlusCircleFill } from 'react-icons/bs'
 
-function FitBounds({ dates }) {
-  const map = useMap()
-  const bounds = dates.map(stop => [stop.lat, stop.lng])
-  map.fitBounds(bounds, { padding: [30, 30] })
-  return null
-}
-
-const smallIcon = new L.Icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  iconSize: [12, 20],
-  iconAnchor: [6, 20],
+const newStop = () => ({
+  venue: '', city: '', state: '', date: '',
+  lat: null, lng: null, geocodeStatus: null, geocodeError: null,
 })
 
 function App() {
+  const navigate = useNavigate()
+
   const initialFormData = {
-    date: "",
-    venue: "",
-    city: "",
-    state: "",
-    bands: "",
-    flyer: null
-  };
-  const [shows, setShows] = useState([]);
-  const [formData, setFormData] = useState(initialFormData);
-  const [message, setMessage] = useState(null);
-  const [formIsOpen, setFormIsOpen] = useState(false);
-  const [selectedShow, setSelectedShow] = useState(null);
-  const [editingShow, setEditingShow] = useState(null);
-  const [password, setPassword] = useState(null);
-
-  // TODO: refactor tours into edit and add functionality
-
-  useEffect(() => {
-    loadShows()
-  }, []);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setMessage(null), 3000);
-    return () => { clearTimeout(timer) }
-  }, [message])
-
-  async function loadShows() {
-    // fetch shows
-    const showData = await pb.collection('shows').getList(1, 50, {
-      $autoCancel: false,
-      sort: '-date'
-    });
-
-    const tourData = await pb.collection('tours').getList(1, 50, {
-      $autoCancel: false,
-      sort: '-year'
-    });
-
-    const data = [...tourData.items, ...showData.items];
-    setShows(data);
+    date: '', venue: '', city: '', state: '',
+    name: '', year: '', bands: '', flyer: null,
   }
+
+  const [formData, setFormData] = useState(initialFormData)
+  const [formType, setFormType] = useState('show')
+  const [stops, setStops] = useState([])
+  const [message, setMessage] = useState(null)
+  const [formIsOpen, setFormIsOpen] = useState(false)
+  const [editingShow, setEditingShow] = useState(null)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setMessage(null), 3000)
+    return () => clearTimeout(timer)
+  }, [message])
 
   function handleChange(e) {
     const { name, value, files } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: files && files.length > 0 ? files[0] : value
+      [name]: files && files.length > 0 ? files[0] : value,
     }))
   }
 
-  function openEditForm(show) {
-    setEditingShow(show);
-    setFormData({
-      date: show.date.split(' ')[0],
-      venue: show.venue,
-      city: show.city,
-      state: show.state,
-      bands: show.bands,
-      flyer: null
-    });
-    setSelectedShow(null);
-    setFormIsOpen(true);
-  }
-
-  async function deleteShow(show) {
-    await pb.collection('shows').delete(show.id)
-    setSelectedShow(null);
-    loadShows();
-  }
-
-  async function submitShow(event) {
-    event.preventDefault();
-    if (formData.password === "mellon") {
-      try {
-        if (editingShow) {
-          const updateData = Object.fromEntries(
-            Object.entries(formData).filter(([key, value]) => value !== null && value !== "")
-          )
-          const record = await pb.collection('shows').update(editingShow.id, updateData);
-          setEditingShow(null);
-          setMessage({ text: "Success, your show has been updated", type: "success" });
-          loadShows();
-        } else {
-          const record = await pb.collection('shows').create(formData);
-          setMessage({ text: "Success! The show has been added.", type: "success" });
-          loadShows();
-          setFormData(initialFormData);
-        }
-      } catch (err) {
-        setMessage({ text: `Error: Something went wrong, please try again. ${err}`, type: "error" });
-      }
+  function openEditForm(entry) {
+    setEditingShow(entry)
+    if (entry.collectionName === 'tours') {
+      setFormType('tour')
+      setFormData({ name: entry.name, year: String(entry.year), bands: entry.bands || '', flyer: null })
+      setStops((entry.dates || []).map(stop => ({
+        ...stop,
+        geocodeStatus: stop.lat && stop.lng ? 'success' : null,
+        geocodeError: null,
+      })))
     } else {
-      setMessage({ text: "Please enter the correct password", type: "error" })
+      setFormType('show')
+      setFormData({
+        date: entry.date.split(' ')[0],
+        venue: entry.venue,
+        city: entry.city,
+        state: entry.state,
+        bands: entry.bands || '',
+        flyer: null,
+      })
+      setStops([])
     }
+    setFormIsOpen(true)
+  }
+
+  async function deleteEntry(entry) {
+    const collection = entry.collectionName === 'tours' ? 'tours' : 'shows'
+    await pb.collection(collection).delete(entry.id)
+    navigate('/')
+  }
+
+  function updateStop(index, updates) {
+    setStops(prev => prev.map((s, i) => i === index ? { ...s, ...updates } : s))
+  }
+
+  function addStop() {
+    setStops(prev => [...prev, newStop()])
+  }
+
+  function removeStop(index) {
+    setStops(prev => prev.filter((_, i) => i !== index))
+  }
+
+  function moveStop(index, direction) {
+    setStops(prev => {
+      const next = [...prev]
+      const target = index + direction
+      if (target < 0 || target >= next.length) return prev
+      ;[next[index], next[target]] = [next[target], next[index]]
+      return next
+    })
+  }
+
+  async function submitForm(event) {
+    event.preventDefault()
+    if (formData.password !== 'mellon') {
+      setMessage({ text: 'Please enter the correct password', type: 'error' })
+      return
+    }
+
+    try {
+      if (formType === 'tour') {
+        const ungeocoded = stops.filter(s => s.geocodeStatus !== 'success')
+        if (ungeocoded.length > 0) {
+          setMessage({ text: 'All stops must be located before saving.', type: 'error' })
+          return
+        }
+        const dates = stops.map(({ venue, city, state, date, lat, lng }) => ({ venue, city, state, date, lat, lng }))
+        const data = new FormData()
+        data.append('name', formData.name)
+        data.append('year', parseInt(formData.year))
+        data.append('bands', formData.bands)
+        data.append('dates', JSON.stringify(dates))
+        if (formData.flyer) data.append('flyer', formData.flyer)
+
+        if (editingShow) {
+          await pb.collection('tours').update(editingShow.id, data)
+          closeForm()
+          navigate(`/tours/${editingShow.id}`, { replace: true })
+        } else {
+          await pb.collection('tours').create(data)
+          setFormData(initialFormData)
+          setStops([])
+          setMessage({ text: 'Tour added successfully.', type: 'success' })
+          navigate('/')
+        }
+      } else {
+        const { name, year, password, ...showFields } = formData
+        const filtered = Object.fromEntries(
+          Object.entries(showFields).filter(([, v]) => v !== null && v !== '')
+        )
+        if (editingShow) {
+          await pb.collection('shows').update(editingShow.id, filtered)
+          closeForm()
+          navigate(`/shows/${editingShow.id}`, { replace: true })
+        } else {
+          await pb.collection('shows').create(filtered)
+          setFormData(initialFormData)
+          setMessage({ text: 'Show added successfully.', type: 'success' })
+          navigate('/')
+        }
+      }
+    } catch (err) {
+      setMessage({ text: `Error: Something went wrong. ${err}`, type: 'error' })
+    }
+  }
+
+  function switchFormType(type) {
+    if (editingShow) return
+    setFormType(type)
+    setFormData(initialFormData)
+    setStops([])
+  }
+
+  function closeForm() {
+    setFormIsOpen(false)
+    setEditingShow(null)
+    setMessage(null)
   }
 
   return (
     <>
-      <nav className="nav container">
-        <div className="nav">
-          <h1>Tour Diary</h1>
-          <button>
-            <BsFillPlusCircleFill size={40} onClick={() => {
-              setEditingShow(null);
-              setFormData(initialFormData);
-              setFormIsOpen(true)
-            }} />
+      <nav className="nav">
+        <div className="nav-inner container">
+          <Link to="/" className="nav-logo">Tour Diary</Link>
+          <button className="nav-add-btn" onClick={() => {
+            setEditingShow(null)
+            setFormData(initialFormData)
+            setStops([])
+            setFormType('show')
+            setFormIsOpen(true)
+          }}>
+            <BsFillPlusCircleFill size={28} />
           </button>
         </div>
       </nav>
 
+      <main>
+        <Outlet context={{ openEditForm, deleteEntry }} />
+      </main>
 
-      <div className="shows container">
-        <div className="shows-grid">
-          {shows.map(show => show.collectionName === "tours" ?
-            <TourCard key={show.id} onClick={() => { setSelectedShow(show) }}
-              {...show} /> :
-            <ShowCard key={show.id} onClick={() => { setSelectedShow(show) }} {...show} />
-          )}
-        </div>
-      </div>
-
-      {formIsOpen && <Modal onClose={setFormIsOpen}>
-        <h2>{editingShow ? "Edit Show" : "Add Show"}</h2>
-        <form className="show-form" method="post" encType='multipart/form-data' onSubmit={submitShow}>
-          <FormField required={true} name="date" type="date" value={formData.date} onChange={handleChange} />
-          <FormField required={true} placeholder="Ex: Bridgestone Arena" name="venue" type="text" value={formData.venue} onChange={handleChange} />
-          <FormField required={true} placeholder="Ex: Nashville" name="city" type="text" value={formData.city} onChange={handleChange} />
-          <FormField required={true} placeholder="Ex: TN" name="state" type="text" value={formData.state} onChange={handleChange} />
-          <FormField required={true} placeholder="Start new line for each band" name="bands" type="textarea" value={formData.bands} rows="5" cols="30" onChange={handleChange} />
-          <FormField required={true} name="flyer" type="file" onChange={handleChange} />
-          <FormField required={true} name="password" type="password" value={formData.password} onChange={handleChange} />
-          {message && <Message message={message} />}
-          <button type="submit">Upload</button>
-        </form>
-      </Modal>}
-
-      {selectedShow && (
-        <Modal onClose={setSelectedShow}>
-          <div className="show-modal">
-            <img src={pb.files.getURL({ id: selectedShow.id, collectionId: selectedShow.collectionId }, selectedShow.flyer)} />
-            <div className='show-modal-title'>
-              <h2>{selectedShow.venue}</h2>
-              <button className='button-invisible' onClick={() => openEditForm(selectedShow)}>
-                <RiEditCircleFill size={40} />
-              </button>
-              <button className="button-invisible" onClick={() => deleteShow(selectedShow)}>
-                <IoCloseCircle size={42} />
-              </button>
-            </div>
-            {selectedShow.year ? <p>{selectedShow.year}</p> : ''}
-            {selectedShow.city && selectedShow.state ? <p>{selectedShow.city}, {selectedShow.state}</p> : ''}
-            {selectedShow.date ? <p>{format(new Date(selectedShow.date), "MM/dd/yyyy")}</p> : ''}
-            {selectedShow.bands.split("\r\n").map((band, i, arr) => {
-              return <span key={i}>{band}{(i + 1 !== arr.length ? ", " : "")}</span>
-            })}
-
-            <MapContainer className='leaflet-route' center={[0, 0]} zoom={2} style={{ height: "400px", width: "100%" }}>
-              <FitBounds dates={selectedShow.dates} />
-              <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
-              <Polyline key="route" positions={selectedShow.dates.map(stop => [stop.lat, stop.lng])} color="black" />
-              {selectedShow.dates.map((stop, i) => <Marker key={i} position={[stop.lat, stop.lng]} icon={smallIcon} />)}
-            </MapContainer>
+      {formIsOpen && (
+        <Modal onClose={closeForm}>
+          <div className="form-tabs">
+            <button
+              type="button"
+              className={`form-tab${formType === 'show' ? ' active' : ''}`}
+              onClick={() => switchFormType('show')}
+              disabled={!!editingShow && formType !== 'show'}
+            >
+              Show
+            </button>
+            <button
+              type="button"
+              className={`form-tab${formType === 'tour' ? ' active' : ''}`}
+              onClick={() => switchFormType('tour')}
+              disabled={!!editingShow && formType !== 'tour'}
+            >
+              Tour
+            </button>
           </div>
+          <h2>{editingShow ? `Edit ${formType === 'tour' ? 'Tour' : 'Show'}` : `Add ${formType === 'tour' ? 'Tour' : 'Show'}`}</h2>
+          <form className="show-form" method="post" encType="multipart/form-data" onSubmit={submitForm}>
+            {formType === 'show' ? (
+              <>
+                <FormField required={true} name="date" type="date" value={formData.date || ''} onChange={handleChange} />
+                <FormField required={true} placeholder="Ex: Bridgestone Arena" name="venue" type="text" value={formData.venue || ''} onChange={handleChange} />
+                <FormField required={true} placeholder="Ex: Nashville" name="city" type="text" value={formData.city || ''} onChange={handleChange} />
+                <FormField required={true} placeholder="Ex: TN" name="state" type="text" value={formData.state || ''} onChange={handleChange} />
+              </>
+            ) : (
+              <>
+                <FormField required={true} placeholder="Tour name" name="name" type="text" value={formData.name || ''} onChange={handleChange} />
+                <FormField required={true} placeholder="Year (e.g. 2024)" name="year" type="number" value={formData.year || ''} onChange={handleChange} />
+              </>
+            )}
+            <FormField required={true} placeholder="Start new line for each band" name="bands" type="textarea" value={formData.bands || ''} rows="5" cols="30" onChange={handleChange} />
+            <FormField required={!editingShow} name="flyer" type="file" onChange={handleChange} />
+
+            {formType === 'tour' && (
+              <div className="tour-stops">
+                <label className="tour-stops-label">Tour Stops</label>
+                {stops.map((stop, i) => (
+                  <TourStopField
+                    key={i}
+                    stop={stop}
+                    index={i}
+                    total={stops.length}
+                    onUpdate={updateStop}
+                    onRemove={() => removeStop(i)}
+                    onMoveUp={() => moveStop(i, -1)}
+                    onMoveDown={() => moveStop(i, 1)}
+                  />
+                ))}
+                <button type="button" className="add-stop-btn" onClick={addStop}>+ Add Stop</button>
+              </div>
+            )}
+
+            <FormField required={true} name="password" type="password" value={formData.password || ''} onChange={handleChange} />
+            {message && <Message message={message} />}
+            <button type="submit">Upload</button>
+          </form>
         </Modal>
       )}
     </>
