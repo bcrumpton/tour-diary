@@ -14,19 +14,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Copy migrations to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          source: "pb_migrations/*"
-          target: "/mnt/user/appdata/pocketbase/pb_migrations/"
-          strip_components: 1
+        run: cp -r pb_migrations/. /mnt/user/appdata/pocketbase/pb_migrations/
 
       - name: Restart PocketBase container
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          script: docker restart pocketbase
+        run: docker restart pocketbase
