@@ -230,6 +230,10 @@ input[type="file"] {
   color: #fff;
 }
 
+.leaflet-route {
+  margin-top: 1rem;
+}
+
 @media screen and (max-width: 767.99px) {
   .truncate-overflow {
     overflow: hidden;
