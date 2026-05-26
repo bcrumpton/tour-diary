@@ -1,25 +1,22 @@
-import { pb } from "../../pocketbase"
+import { Link } from 'react-router-dom'
+import { pb } from '../../pocketbase'
 
-export default function TourCard({ onClick, id, collectionId, bands, dates, flyer, name, year }) {
-  const imageUrl = flyer
-    ? pb.files.getURL({ id, collectionId }, flyer)
-    : null;
+export default function TourCard({ id, collectionId, flyer, name, year, bands }) {
+  const imageUrl = flyer ? pb.files.getURL({ id, collectionId }, flyer) : null
+  const bandList = bands ? bands.split(/\r?\n/) : []
+
   return (
-    <div className='showCard' onClick={onClick}>
-      <div className="flyer-container" style={{ '--flyer-url': `url(${imageUrl})` }}>
-        <img src={imageUrl} alt="" />
+    <Link to={`/tours/${id}`} className="show-card">
+      <div className="card-image" style={{ '--flyer-url': `url(${imageUrl})` }}>
+        <img src={imageUrl} alt={name} />
       </div>
-      <div className='show-information'>
-        <h2>{name}</h2>
-        <p>{year}</p>
-        <div className="truncate-overflow">
-          <p>
-            {bands.split(/\r?\n/).map((band, i, arr) => (
-              <span className='band' key={i}>{band}{(i + 1) !== arr.length ? ", " : ""}</span>
-            ))}
-          </p>
-        </div>
+      <div className="card-info">
+        <h2 className="card-title">{name}</h2>
+        <p className="card-date">{year}</p>
+        {bandList.length > 0 && (
+          <p className="card-bands truncate-overflow">{bandList.join(', ')}</p>
+        )}
       </div>
-    </div>
+    </Link>
   )
 }

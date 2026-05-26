@@ -1,29 +1,24 @@
-import React from 'react'
+import { Link } from 'react-router-dom'
 import { format } from 'date-fns'
 import { pb } from '../../pocketbase'
 
-export default function showCard({ id, collectionId, flyer, venue, city, state, bands, date, onClick }) {
-  const imageUrl = flyer
-    ? pb.files.getURL({ id, collectionId }, flyer)
-    : null;
+export default function ShowCard({ id, collectionId, flyer, venue, city, state, bands, date }) {
+  const imageUrl = flyer ? pb.files.getURL({ id, collectionId }, flyer) : null
+  const bandList = bands ? bands.split(/\r?\n/) : []
 
   return (
-    <div className='showCard' onClick={onClick}>
-      <div className="flyer-container" style={{ '--flyer-url': `url(${imageUrl})` }}>
-        <img src={imageUrl} alt="" />
+    <Link to={`/shows/${id}`} className="show-card">
+      <div className="card-image" style={{ '--flyer-url': `url(${imageUrl})` }}>
+        <img src={imageUrl} alt={venue} />
       </div>
-      <div className='show-information'>
-        <h2>{venue}</h2>
-        <p>{`${city}, ${state}`}</p>
-        <p>{format(new Date(date), "MM/dd/yyyy")}</p>
-        <div className="truncate-overflow">
-          <p>
-            {bands.split(/\r?\n/).map((band, i, arr) => (
-              <span className='band' key={i}>{band}{(i + 1) !== arr.length ? ", " : ""}</span>
-            ))}
-          </p>
-        </div>
+      <div className="card-info">
+        <h2 className="card-title">{venue}</h2>
+        <p className="card-meta">{city}, {state}</p>
+        {date && <p className="card-date">{format(new Date(date), 'MMM d, yyyy')}</p>}
+        {bandList.length > 0 && (
+          <p className="card-bands truncate-overflow">{bandList.join(', ')}</p>
+        )}
       </div>
-    </div>
+    </Link>
   )
 }
