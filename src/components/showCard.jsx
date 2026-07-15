@@ -2,14 +2,20 @@ import { Link } from 'react-router-dom'
 import { format } from 'date-fns'
 import { pb } from '../../pocketbase'
 
-export default function ShowCard({ id, collectionId, flyer, venue, city, state, bands, date }) {
-  const imageUrl = flyer ? pb.files.getURL({ id, collectionId }, flyer) : null
+export default function ShowCard({ id, collectionId, flyer, venue, city, state, bands, date, priority }) {
+  const imageUrl = flyer ? pb.files.getURL({ id, collectionId }, flyer, { thumb: '480x640' }) : null
   const bandList = bands ? bands.split(/\r?\n/) : []
 
   return (
     <Link to={`/shows/${id}`} className="show-card">
       <div className="card-image" style={{ '--flyer-url': `url(${imageUrl})` }}>
-        <img src={imageUrl} alt={venue} />
+        <img
+          src={imageUrl}
+          alt={venue}
+          loading={priority ? 'eager' : 'lazy'}
+          decoding="async"
+          fetchPriority={priority ? 'high' : 'auto'}
+        />
       </div>
       <div className="card-info">
         <h2 className="card-title">{venue}</h2>

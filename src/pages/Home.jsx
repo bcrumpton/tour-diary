@@ -18,9 +18,9 @@ export default function Home() {
   return (
     <div className="shows container">
       <div className="shows-grid">
-        {shows.map(show => show.collectionName === 'tours'
-          ? <TourCard key={show.id} {...show} />
-          : <ShowCard key={show.id} {...show} />
+        {shows.map((show, index) => show.collectionName === 'tours'
+          ? <TourCard key={show.id} {...show} priority={index < 6} />
+          : <ShowCard key={show.id} {...show} priority={index < 6} />
         )}
       </div>
     </div>

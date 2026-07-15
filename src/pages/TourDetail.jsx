@@ -43,7 +43,7 @@ export default function TourDetail() {
 
   if (!tour) return <div className="container loading">Loading...</div>
 
-  const imageUrl = pb.files.getURL({ id: tour.id, collectionId: tour.collectionId }, tour.flyer)
+  const imageUrl = pb.files.getURL({ id: tour.id, collectionId: tour.collectionId }, tour.flyer, { thumb: '1000x0' })
   const title = `${tour.name} · ${tour.year}`
   const description = tour.bands ? tour.bands.split(/\r?\n/).join(', ') : ''
 
@@ -64,7 +64,7 @@ export default function TourDetail() {
       <div className="detail-layout">
         <div className="detail-flyer">
           <img
-            src={pb.files.getURL({ id: tour.id, collectionId: tour.collectionId }, tour.flyer)}
+            src={imageUrl}
             alt={tour.name}
             className="flyer-clickable"
             onClick={() => setLightbox(true)}

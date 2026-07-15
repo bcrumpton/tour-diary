@@ -19,7 +19,7 @@ export default function ShowDetail() {
 
   if (!show) return <div className="container loading">Loading...</div>
 
-  const imageUrl = pb.files.getURL({ id: show.id, collectionId: show.collectionId }, show.flyer)
+  const imageUrl = pb.files.getURL({ id: show.id, collectionId: show.collectionId }, show.flyer, { thumb: '1000x0' })
   const title = `${show.venue} — ${show.city}, ${show.state}`
   const description = [
     show.date ? format(new Date(show.date), 'MMMM d, yyyy') : null,
@@ -43,7 +43,7 @@ export default function ShowDetail() {
       <div className="detail-layout">
         <div className="detail-flyer">
           <img
-            src={pb.files.getURL({ id: show.id, collectionId: show.collectionId }, show.flyer)}
+            src={imageUrl}
             alt={show.venue}
             className="flyer-clickable"
             onClick={() => setLightbox(true)}
